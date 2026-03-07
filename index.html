@@ -1,0 +1,1641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Happy Coin Clicker: Ultimate Edition</title>
+    <script src="https://sdk.crazygames.com/crazygames-sdk-v3.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet" />
+    <style>
+        :root {
+            --gold: #FFD700;
+            --gold-dark: #e6b800;
+            --bg: #0a0a1a;
+            --panel: #12122a;
+            --panel2: #1a1a3a;
+            --accent: #ff4fcf;
+            --accent2: #4ff0ff;
+            --green: #4cff91;
+            --red: #ff4f4f;
+            --text: #f0eaff;
+            --shadow: 0 4px 32px rgba(0,0,0,0.7);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg);
+            font-family: 'Nunito', sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+            overflow: hidden;
+            user-select: none;
+        }
+
+            /* Stars background */
+            body::before {
+                content: '';
+                position: fixed;
+                inset: 0;
+                background: radial-gradient(ellipse at 20% 20%, rgba(255,79,207,0.08) 0%, transparent 60%), radial-gradient(ellipse at 80% 80%, rgba(79,240,255,0.08) 0%, transparent 60%), radial-gradient(ellipse at 50% 50%, rgba(255,215,0,0.04) 0%, transparent 70%);
+                pointer-events: none;
+                z-index: 0;
+            }
+
+        #stars-canvas {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.5;
+        }
+
+        #app {
+            position: relative;
+            z-index: 1;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* ── HEADER ── */
+        #header {
+            width: 100%;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(180deg, rgba(10,10,26,0.98) 0%, transparent 100%);
+        }
+
+            #header h1 {
+                font-family: 'Fredoka One', cursive;
+                font-size: clamp(18px, 3vw, 28px);
+                background: linear-gradient(90deg, var(--gold) 0%, #ff9f00 50%, var(--accent) 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                text-shadow: none;
+                filter: drop-shadow(0 0 10px rgba(255,215,0,0.4));
+                letter-spacing: 1px;
+            }
+
+        .header-btns {
+            display: flex;
+            gap: 8px;
+        }
+
+        .icon-btn {
+            background: var(--panel2);
+            border: 1.5px solid rgba(255,215,0,0.2);
+            color: var(--gold);
+            border-radius: 10px;
+            padding: 6px 12px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.18s;
+            font-family: 'Nunito', sans-serif;
+            font-weight: 700;
+        }
+
+            .icon-btn:hover {
+                background: rgba(255,215,0,0.15);
+                border-color: var(--gold);
+                transform: scale(1.07);
+            }
+
+        /* ── STATS BAR ── */
+        #stats-bar {
+            display: flex;
+            gap: 14px;
+            padding: 8px 20px;
+            width: 100%;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .stat-pill {
+            background: var(--panel);
+            border: 1.5px solid rgba(255,215,0,0.18);
+            border-radius: 50px;
+            padding: 5px 18px;
+            font-size: clamp(12px, 2vw, 15px);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+            .stat-pill span.val {
+                color: var(--gold);
+                font-size: 1.1em;
+            }
+
+            .stat-pill.score-pill span.val {
+                color: var(--accent2);
+            }
+
+            .stat-pill.mult-pill span.val {
+                color: var(--green);
+            }
+
+        /* ── TIMER BAR ── */
+        #timer-wrap {
+            width: min(500px, 90vw);
+            margin: 4px auto;
+            background: rgba(255,255,255,0.07);
+            border-radius: 99px;
+            height: 14px;
+            overflow: hidden;
+            border: 1px solid rgba(255,215,0,0.2);
+            position: relative;
+        }
+
+        #timer-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent) 0%, var(--gold) 100%);
+            border-radius: 99px;
+            transition: width 0.1s linear;
+            width: 100%;
+            position: relative;
+        }
+
+            #timer-bar::after {
+                content: '';
+                position: absolute;
+                top: 2px;
+                right: 4px;
+                width: 40%;
+                height: 4px;
+                background: rgba(255,255,255,0.35);
+                border-radius: 99px;
+            }
+
+        #timer-label {
+            text-align: center;
+            font-size: 13px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.5);
+            margin-top: 2px;
+        }
+
+        /* ── GAME ARENA ── */
+        #arena {
+            flex: 1;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            cursor: default;
+        }
+
+        /* ── COIN ── */
+        #coin {
+            position: absolute;
+            width: clamp(80px, 12vw, 110px);
+            height: clamp(80px, 12vw, 110px);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: clamp(36px, 6vw, 54px);
+            cursor: pointer;
+            transition: left 0.25s cubic-bezier(0.34,1.56,0.64,1), top 0.25s cubic-bezier(0.34,1.56,0.64,1);
+            border: 5px solid rgba(255,255,255,0.25);
+            box-shadow: 0 0 30px rgba(255,215,0,0.5), 0 8px 20px rgba(0,0,0,0.5), inset 0 -4px 10px rgba(0,0,0,0.25);
+            animation: coinBob 1.6s ease-in-out infinite;
+            transform-origin: center center;
+            will-change: transform;
+            z-index: 10;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+            #coin.disabled {
+                filter: grayscale(0.6) brightness(0.6);
+                cursor: not-allowed;
+                pointer-events: none;
+            }
+
+            #coin.pop {
+                animation: coinPop 0.12s ease-out, coinBob 1.6s ease-in-out infinite 0.12s;
+            }
+
+        @keyframes coinBob {
+            0%, 100% {
+                transform: translateY(0) rotate(-2deg);
+            }
+
+            50% {
+                transform: translateY(-18px) rotate(2deg);
+            }
+        }
+
+        @keyframes coinPop {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(0.82);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* Skin styles */
+        .skin-red {
+            background: radial-gradient(circle at 35% 35%, #ff6b6b, #c0392b);
+            border-color: #e74c3c;
+        }
+
+        .skin-yellow {
+            background: radial-gradient(circle at 35% 35%, #fff176, #f1c40f);
+            border-color: #f39c12;
+        }
+
+        .skin-blue {
+            background: radial-gradient(circle at 35% 35%, #74b9ff, #0984e3);
+            border-color: #2980b9;
+        }
+
+        .skin-pink {
+            background: radial-gradient(circle at 35% 35%, #fd79a8, #e84393);
+            border-color: #c0306b;
+        }
+
+        .skin-green {
+            background: radial-gradient(circle at 35% 35%, #a9ff80, #27ae60);
+            border-color: #1e8449;
+        }
+
+        .skin-coral {
+            background: radial-gradient(circle at 35% 35%, #ffeaa7, #e17055);
+            border-color: #d35400;
+        }
+
+        .skin-rainbow {
+            animation: coinBob 1.6s ease-in-out infinite, rainbowSpin 2s linear infinite;
+            border-color: rgba(255,255,255,0.6) !important;
+            box-shadow: 0 0 40px rgba(255,100,255,0.7), 0 0 80px rgba(100,200,255,0.4), 0 8px 20px rgba(0,0,0,0.5);
+        }
+
+            .skin-rainbow.pop {
+                animation: coinPop 0.12s ease-out, rainbowSpin 2s linear infinite 0.12s;
+            }
+
+        @keyframes rainbowSpin {
+            0% {
+                background: radial-gradient(circle at 35% 35%, #ff6b6b, #c0392b);
+            }
+
+            14% {
+                background: radial-gradient(circle at 35% 35%, #ffd700, #e67e22);
+            }
+
+            28% {
+                background: radial-gradient(circle at 35% 35%, #a9ff80, #27ae60);
+            }
+
+            42% {
+                background: radial-gradient(circle at 35% 35%, #74b9ff, #0984e3);
+            }
+
+            57% {
+                background: radial-gradient(circle at 35% 35%, #b388ff, #6c3483);
+            }
+
+            71% {
+                background: radial-gradient(circle at 35% 35%, #fd79a8, #e84393);
+            }
+
+            85% {
+                background: radial-gradient(circle at 35% 35%, #ff6b6b, #e74c3c);
+            }
+
+            100% {
+                background: radial-gradient(circle at 35% 35%, #ff6b6b, #c0392b);
+            }
+        }
+
+        /* ── START / END OVERLAY ── */
+        #overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(5,5,20,0.88);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+            z-index: 50;
+            backdrop-filter: blur(6px);
+        }
+
+            #overlay.hidden {
+                display: none;
+            }
+
+            #overlay h2 {
+                font-family: 'Fredoka One', cursive;
+                font-size: clamp(32px, 7vw, 64px);
+                background: linear-gradient(90deg, var(--gold), var(--accent), var(--accent2));
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                filter: drop-shadow(0 0 20px rgba(255,215,0,0.5));
+                text-align: center;
+                line-height: 1.1;
+            }
+
+            #overlay p {
+                font-size: clamp(13px, 2.5vw, 18px);
+                color: rgba(255,255,255,0.65);
+                text-align: center;
+                max-width: 380px;
+                line-height: 1.6;
+            }
+
+            #overlay .result-row {
+                display: flex;
+                gap: 24px;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            #overlay .result-box {
+                background: var(--panel);
+                border: 1.5px solid rgba(255,215,0,0.2);
+                border-radius: 16px;
+                padding: 14px 28px;
+                text-align: center;
+            }
+
+                #overlay .result-box .rb-label {
+                    font-size: 12px;
+                    color: rgba(255,255,255,0.5);
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                }
+
+                #overlay .result-box .rb-val {
+                    font-family: 'Fredoka One', cursive;
+                    font-size: clamp(26px, 5vw, 40px);
+                    color: var(--gold);
+                }
+
+                #overlay .result-box.new {
+                    border-color: var(--green);
+                }
+
+                    #overlay .result-box.new .rb-val {
+                        color: var(--green);
+                    }
+
+        /* ── BUTTONS ── */
+        .btn {
+            font-family: 'Fredoka One', cursive;
+            font-size: clamp(15px, 2.5vw, 20px);
+            padding: 14px 38px;
+            border: none;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.18s;
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .btn::after {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 45%;
+                background: rgba(255,255,255,0.12);
+                border-radius: 16px 16px 0 0;
+                pointer-events: none;
+            }
+
+            .btn:hover {
+                transform: translateY(-3px) scale(1.04);
+            }
+
+            .btn:active {
+                transform: translateY(1px) scale(0.97);
+            }
+
+        .btn-gold {
+            background: linear-gradient(180deg, #ffe066 0%, #e6a800 100%);
+            color: #3a2000;
+            box-shadow: 0 6px 20px rgba(255,180,0,0.5), 0 2px 0 #c47700;
+        }
+
+        .btn-pink {
+            background: linear-gradient(180deg, #ff79d8 0%, #cc008f 100%);
+            color: #fff;
+            box-shadow: 0 6px 20px rgba(255,50,200,0.4), 0 2px 0 #a0006e;
+        }
+
+        .btn-blue {
+            background: linear-gradient(180deg, #74d7ff 0%, #0080cc 100%);
+            color: #fff;
+            box-shadow: 0 6px 20px rgba(0,150,255,0.4), 0 2px 0 #005fa0;
+        }
+
+        .btn-green {
+            background: linear-gradient(180deg, #79ffb0 0%, #00a855 100%);
+            color: #002b15;
+            box-shadow: 0 6px 20px rgba(0,200,80,0.4), 0 2px 0 #007a3d;
+        }
+
+        .btn-red {
+            background: linear-gradient(180deg, #ff8080 0%, #cc0000 100%);
+            color: #fff;
+            box-shadow: 0 6px 20px rgba(200,0,0,0.4), 0 2px 0 #900;
+        }
+
+        .btn-ghost {
+            background: transparent;
+            border: 1.5px solid rgba(255,255,255,0.25);
+            color: rgba(255,255,255,0.7);
+            box-shadow: none;
+        }
+
+            .btn-ghost:hover {
+                border-color: rgba(255,255,255,0.5);
+                color: #fff;
+            }
+
+        /* ── BOTTOM BAR ── */
+        #bottom-bar {
+            padding: 10px 20px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            background: linear-gradient(0deg, rgba(10,10,26,0.98) 0%, transparent 100%);
+        }
+
+            #bottom-bar .btn {
+                padding: 10px 24px;
+                font-size: clamp(13px, 2vw, 16px);
+            }
+
+        /* ── MODAL ── */
+        #modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.75);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        }
+
+            #modal-backdrop.hidden {
+                display: none;
+            }
+
+        .modal-box {
+            background: linear-gradient(160deg, #16163a 0%, #0e0e28 100%);
+            border: 1.5px solid rgba(255,215,0,0.2);
+            border-radius: 24px;
+            padding: 28px 32px;
+            max-width: min(520px, 95vw);
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 0 80px rgba(255,215,0,0.12), var(--shadow);
+        }
+
+            .modal-box h3 {
+                font-family: 'Fredoka One', cursive;
+                font-size: clamp(22px, 4vw, 30px);
+                margin-bottom: 16px;
+                background: linear-gradient(90deg, var(--gold), var(--accent));
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
+
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #fff;
+            font-size: 20px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: 0.18s;
+        }
+
+            .modal-close:hover {
+                background: rgba(255,255,255,0.2);
+            }
+
+        /* ── GACHA SHOP ── */
+        #gacha-result {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            margin-top: 16px;
+            animation: resultPop 0.4s cubic-bezier(0.34,1.56,0.64,1);
+        }
+
+        @keyframes resultPop {
+            0% {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        #gacha-coin-preview {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 42px;
+            border: 4px solid rgba(255,255,255,0.3);
+        }
+
+        #gacha-result .rarity-badge {
+            font-family: 'Fredoka One', cursive;
+            font-size: 15px;
+            padding: 4px 16px;
+            border-radius: 99px;
+            background: rgba(255,215,0,0.15);
+            color: var(--gold);
+            border: 1px solid rgba(255,215,0,0.4);
+        }
+
+            #gacha-result .rarity-badge.legendary {
+                background: linear-gradient(90deg, rgba(255,79,207,0.2), rgba(79,240,255,0.2));
+                color: #fff;
+                border-color: var(--accent);
+                animation: rainbowSpin 2s linear infinite;
+                /* text stays white */
+                -webkit-text-fill-color: white;
+            }
+
+        .skin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(110px,1fr));
+            gap: 10px;
+            margin: 12px 0;
+        }
+
+        .skin-card {
+            background: var(--panel);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 14px;
+            padding: 10px 6px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.18s;
+        }
+
+            .skin-card:hover {
+                border-color: var(--gold);
+                transform: scale(1.04);
+            }
+
+            .skin-card.active {
+                border-color: var(--gold);
+                background: rgba(255,215,0,0.1);
+            }
+
+            .skin-card .sc-icon {
+                font-size: 32px;
+            }
+
+            .skin-card .sc-name {
+                font-size: 11px;
+                font-weight: 700;
+                margin-top: 4px;
+                color: rgba(255,255,255,0.75);
+            }
+
+            .skin-card .sc-chance {
+                font-size: 10px;
+                color: rgba(255,255,255,0.4);
+            }
+
+        /* ── LEADERBOARD ── */
+        .lb-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            margin-bottom: 6px;
+        }
+
+            .lb-row:nth-child(odd) {
+                background: rgba(255,255,255,0.04);
+            }
+
+        .lb-rank {
+            font-family: 'Fredoka One', cursive;
+            font-size: 20px;
+            width: 32px;
+            color: rgba(255,255,255,0.4);
+            text-align: center;
+        }
+
+            .lb-rank.top1 {
+                color: var(--gold);
+            }
+
+            .lb-rank.top2 {
+                color: #ccc;
+            }
+
+            .lb-rank.top3 {
+                color: #cd7f32;
+            }
+
+        .lb-name {
+            flex: 1;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .lb-score {
+            font-family: 'Fredoka One', cursive;
+            color: var(--accent2);
+            font-size: 18px;
+        }
+
+        .lb-empty {
+            text-align: center;
+            color: rgba(255,255,255,0.35);
+            padding: 30px;
+            font-size: 14px;
+        }
+
+        /* ── SETTINGS ── */
+        .setting-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .setting-label {
+            font-weight: 700;
+            font-size: 15px;
+        }
+
+        .setting-sub {
+            font-size: 12px;
+            color: rgba(255,255,255,0.4);
+            margin-top: 2px;
+        }
+
+        /* Toggle */
+        .toggle {
+            position: relative;
+            width: 50px;
+            height: 26px;
+            cursor: pointer;
+        }
+
+            .toggle input {
+                opacity: 0;
+                width: 0;
+                height: 0;
+            }
+
+        .toggle-slider {
+            position: absolute;
+            inset: 0;
+            background: rgba(255,255,255,0.15);
+            border-radius: 99px;
+            transition: 0.25s;
+        }
+
+            .toggle-slider::before {
+                content: '';
+                position: absolute;
+                left: 3px;
+                top: 3px;
+                width: 20px;
+                height: 20px;
+                background: #fff;
+                border-radius: 50%;
+                transition: 0.25s;
+            }
+
+        .toggle input:checked + .toggle-slider {
+            background: var(--green);
+        }
+
+            .toggle input:checked + .toggle-slider::before {
+                transform: translateX(24px);
+            }
+
+        /* ── REBIRTH ── */
+        #rebirth-btn {
+            display: none;
+        }
+
+            #rebirth-btn.visible {
+                display: inline-flex;
+            }
+
+        /* ── PARTICLES / FLOATERS ── */
+        .particle {
+            position: absolute;
+            pointer-events: none;
+            border-radius: 50%;
+            animation: particleFly 0.7s ease-out forwards;
+            z-index: 20;
+        }
+
+        @keyframes particleFly {
+            0% {
+                transform: translate(0,0) scale(1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translate(var(--tx), var(--ty)) scale(0);
+                opacity: 0;
+            }
+        }
+
+        .floater {
+            position: absolute;
+            pointer-events: none;
+            font-family: 'Fredoka One', cursive;
+            font-size: 24px;
+            color: var(--gold);
+            text-shadow: 0 0 8px rgba(255,180,0,0.7);
+            animation: floatUp 0.9s ease-out forwards;
+            z-index: 21;
+            white-space: nowrap;
+        }
+
+        @keyframes floatUp {
+            0% {
+                transform: translateY(0) scale(1);
+                opacity: 1;
+            }
+
+            100% {
+                transform: translateY(-80px) scale(0.8);
+                opacity: 0;
+            }
+        }
+
+        /* ── AD BANNER PLACEHOLDER ── */
+        #banner-ad {
+            width: 100%;
+            min-height: 50px;
+            background: rgba(255,255,255,0.03);
+            border-top: 1px solid rgba(255,255,255,0.06);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            color: rgba(255,255,255,0.2);
+            letter-spacing: 1px;
+        }
+
+        /* ── NOTIFICATION TOAST ── */
+        #toast {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: var(--panel);
+            border: 1.5px solid rgba(255,215,0,0.3);
+            border-radius: 99px;
+            padding: 10px 24px;
+            font-weight: 700;
+            font-size: 14px;
+            opacity: 0;
+            transition: all 0.3s;
+            pointer-events: none;
+            z-index: 999;
+            white-space: nowrap;
+        }
+
+            #toast.show {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+
+        /* LOADING SCREEN */
+        #loading-screen {
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            transition: opacity 0.5s;
+        }
+
+            #loading-screen h1 {
+                font-family: 'Fredoka One', cursive;
+                font-size: 36px;
+                background: linear-gradient(90deg, var(--gold), var(--accent));
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
+
+        .loader-ring {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255,215,0,0.15);
+            border-top-color: var(--gold);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255,215,0,0.2);
+            border-radius: 99px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- LOADING -->
+    <div id="loading-screen">
+        <h1>🪙 Happy Coin Clicker</h1>
+        <div class="loader-ring"></div>
+        <p style="color:rgba(255,255,255,0.4);font-size:13px">Loading your gold...</p>
+    </div>
+
+    <div id="app">
+
+        <!-- HEADER -->
+        <div id="header">
+            <h1>🪙 Happy Coin Clicker</h1>
+            <div class="header-btns">
+                <button class="icon-btn" onclick="openModal('lb-modal')" title="Leaderboard">🏆</button>
+                <button class="icon-btn" onclick="openModal('settings-modal')" title="Settings">⚙️</button>
+            </div>
+        </div>
+
+        <!-- STATS -->
+        <div id="stats-bar">
+            <div class="stat-pill">💰 <span class="val" id="wallet-display">0</span></div>
+            <div class="stat-pill score-pill">⭐ Score: <span class="val" id="score-display">0</span></div>
+            <div class="stat-pill score-pill">🏅 Best: <span class="val" id="best-display">0</span></div>
+            <div class="stat-pill mult-pill">✖️ <span class="val" id="mult-display">x1</span></div>
+        </div>
+
+        <!-- TIMER -->
+        <div id="timer-wrap"><div id="timer-bar"></div></div>
+        <div id="timer-label">Click START to play!</div>
+
+        <!-- ARENA -->
+        <div id="arena">
+            <div id="coin" class="skin-yellow">☀️</div>
+
+            <!-- OVERLAY -->
+            <div id="overlay">
+                <h2 id="overlay-title">Happy Coin<br />Clicker!</h2>
+                <p id="overlay-sub">Click the bouncing coin as fast as you can!<br />You have <strong>20 seconds</strong> per round.</p>
+                <div id="overlay-results" class="result-row" style="display:none"></div>
+                <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
+                    <button class="btn btn-gold" id="start-btn" onclick="startGame()">▶ START</button>
+                    <button class="btn btn-blue" id="rewarded-btn" onclick="watchAdForCoins()" style="display:none">📺 Watch Ad +50💰</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- BOTTOM BAR -->
+        <div id="bottom-bar">
+            <button class="btn btn-pink" onclick="openModal('shop-modal')">🎰 Gacha Shop (50💰)</button>
+            <button class="btn btn-green" id="rebirth-btn" onclick="doRebirth()">🔄 Rebirth!</button>
+        </div>
+
+        <!-- BANNER AD -->
+        <div id="banner-ad">ADVERTISEMENT</div>
+
+    </div>
+
+    <!-- TOAST -->
+    <div id="toast"></div>
+
+    <!-- ══════════════ MODALS ══════════════ -->
+    <!-- SHOP MODAL -->
+    <div id="modal-backdrop" class="hidden" onclick="backdropClose(event)">
+
+        <div class="modal-box" id="shop-modal" style="display:none">
+            <button class="modal-close" onclick="closeModal()">✕</button>
+            <h3>🎰 Gacha Shop</h3>
+            <p style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:12px">Spend 💰50 per roll. Collect all skins!</p>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+                <button class="btn btn-gold" onclick="doGachaRoll()">🎲 Roll! (50💰)</button>
+                <button class="btn btn-ghost" onclick="doGachaRoll(true)">🎲🎲 Roll ×5 (240💰)</button>
+            </div>
+            <div id="gacha-result">
+                <div id="gacha-coin-preview" class="skin-yellow">☀️</div>
+                <div style="font-family:'Fredoka One',cursive;font-size:20px" id="gacha-skin-name">Sunshine Yellow</div>
+                <div class="rarity-badge" id="gacha-rarity-badge">Common</div>
+                <p style="font-size:13px;color:rgba(255,255,255,0.5)" id="gacha-flavor"></p>
+            </div>
+            <hr style="border:none;border-top:1px solid rgba(255,255,255,0.08);margin:16px 0" />
+            <h4 style="font-family:'Fredoka One',cursive;margin-bottom:10px;color:rgba(255,255,255,0.8)">Your Collection — Click to Equip</h4>
+            <div class="skin-grid" id="skin-collection"></div>
+        </div>
+
+        <!-- LEADERBOARD MODAL -->
+        <div class="modal-box" id="lb-modal" style="display:none">
+            <button class="modal-close" onclick="closeModal()">✕</button>
+            <h3>🏆 Global Rankings</h3>
+            <div id="lb-content">
+                <div class="lb-empty">Loading scores...</div>
+            </div>
+            <div style="margin-top:16px;display:flex;gap:10px">
+                <button class="btn btn-gold" onclick="submitScore()">📤 Submit My Score</button>
+                <button class="btn btn-ghost" onclick="loadLeaderboard()">🔄 Refresh</button>
+            </div>
+        </div>
+
+        <!-- SETTINGS MODAL -->
+        <div class="modal-box" id="settings-modal" style="display:none">
+            <button class="modal-close" onclick="closeModal()">✕</button>
+            <h3>⚙️ Settings</h3>
+
+            <div class="setting-row">
+                <div>
+                    <div class="setting-label">🔊 Sound Effects</div>
+                    <div class="setting-sub">Pop sounds on coin click</div>
+                </div>
+                <label class="toggle">
+                    <input type="checkbox" id="sound-toggle" checked onchange="toggleSound(this.checked)" />
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="setting-row">
+                <div>
+                    <div class="setting-label">🎵 Music</div>
+                    <div class="setting-sub">Background arcade music</div>
+                </div>
+                <label class="toggle">
+                    <input type="checkbox" id="music-toggle" onchange="toggleMusic(this.checked)" />
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="setting-row" style="border:none">
+                <div>
+                    <div class="setting-label">☁️ Cloud Save</div>
+                    <div class="setting-sub">Auto-synced via CrazyGames</div>
+                </div>
+                <span style="font-size:12px;color:var(--green)">● Active</span>
+            </div>
+
+            <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap">
+                <button class="btn btn-blue" style="font-size:13px;padding:10px 18px" onclick="saveData()">💾 Save Now</button>
+                <button class="btn btn-red" style="font-size:13px;padding:10px 18px" onclick="confirmReset()">🗑️ Reset Progress</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ══════════════════════════════════════
+        //  GAME STATE
+        // ══════════════════════════════════════
+        const GAME_DURATION = 20;
+        const GACHA_COST = 50;
+        const GACHA_5_COST = 240;
+        const REBIRTH_SCORE = 100;
+
+        const SKINS = [
+            { id: 'red', name: 'Red Hot', emoji: '😡', cls: 'skin-red', rarity: 'Common', chance: 30, flavor: 'Fuming with fury.' },
+            { id: 'yellow', name: 'Sunshine', emoji: '☀️', cls: 'skin-yellow', rarity: 'Common', chance: 25, flavor: 'Joyful and bright!' },
+            { id: 'blue', name: 'Electric Blue', emoji: '⚡', cls: 'skin-blue', rarity: 'Uncommon', chance: 15, flavor: 'Charged up & ready.' },
+            { id: 'pink', name: 'Hot Pink', emoji: '💅', cls: 'skin-pink', rarity: 'Rare', chance: 10, flavor: 'Confident & fierce.' },
+            { id: 'green', name: 'Bright Lime', emoji: '🤢', cls: 'skin-green', rarity: 'Rare', chance: 10, flavor: 'Gloriously vivid.' },
+            { id: 'coral', name: 'Neon Coral', emoji: '🔥', cls: 'skin-coral', rarity: 'Epic', chance: 8, flavor: 'Punchy & fiery.' },
+            { id: 'rainbow', name: 'RAINBOW', emoji: '🌈', cls: 'skin-rainbow', rarity: 'Legendary', chance: 2, flavor: 'The ultimate prize!' },
+        ];
+
+        let wallet = 0;
+        let highScore = 0;
+        let multiplier = 1;
+        let currentScore = 0;
+        let ownedSkins = ['yellow'];
+        let activeSkin = 'yellow';
+        let soundOn = true;
+        let musicOn = false;
+        let gameRunning = false;
+        let timerInterval = null;
+        let timeLeft = GAME_DURATION;
+        let sdkReady = false;
+        let audioCtx = null;
+
+        // ══════════════════════════════════════
+        //  CRAZYGAMES SDK
+        // ══════════════════════════════════════
+        async function initSDK() {
+            try {
+                await window.CrazyGames.SDK.init();
+                sdkReady = true;
+                console.log('[SDK] Ready');
+                requestBannerAd();
+                await loadData();
+            } catch (e) {
+                console.warn('[SDK] Init failed, running offline:', e);
+                loadLocalFallback();
+            }
+        }
+
+        function requestBannerAd() {
+            try {
+                window.CrazyGames.SDK.banner.requestResponsiveBanner(['728x90', '320x50'], {
+                    containerId: 'banner-ad'
+                });
+            } catch (e) {
+                document.getElementById('banner-ad').style.display = 'none';
+            }
+        }
+
+        function requestMidgameAd() {
+            if (!sdkReady) return;
+            try {
+                window.CrazyGames.SDK.ad.requestAd('midgame', {
+                    adStarted: () => { pauseGame(); },
+                    adFinished: () => { resumeGameAfterAd(); },
+                    adError: (e) => { console.warn('Ad error:', e); resumeGameAfterAd(); },
+                });
+            } catch (e) { }
+        }
+
+        function watchAdForCoins() {
+            if (!sdkReady) { showToast('SDK not ready!'); return; }
+            try {
+                window.CrazyGames.SDK.ad.requestAd('rewarded', {
+                    adStarted: () => { },
+                    adFinished: () => {
+                        wallet += 50;
+                        updateUI();
+                        saveData();
+                        showToast('🎉 +50💰 Rewarded!');
+                    },
+                    adError: (e) => { showToast('Ad failed. Try again!'); },
+                });
+            } catch (e) { showToast('Ad unavailable.'); }
+        }
+
+        // ── DATA (Cloud Save) ──
+        async function saveData() {
+            const data = JSON.stringify({ wallet, highScore, multiplier, ownedSkins, activeSkin, soundOn });
+            if (sdkReady) {
+                try { await window.CrazyGames.SDK.data.setItem('hcc_save', data); } catch (e) { }
+            }
+            try { localStorage.setItem('hcc_save', data); } catch (e) { }
+        }
+
+        async function loadData() {
+            let raw = null;
+            if (sdkReady) {
+                try {
+                    const res = await window.CrazyGames.SDK.data.getItem('hcc_save');
+                    if (res) raw = res;
+                } catch (e) { }
+            }
+            if (!raw) {
+                try { raw = localStorage.getItem('hcc_save'); } catch (e) { }
+            }
+            if (raw) {
+                try {
+                    const d = JSON.parse(raw);
+                    wallet = d.wallet || 0;
+                    highScore = d.highScore || 0;
+                    multiplier = d.multiplier || 1;
+                    ownedSkins = d.ownedSkins || ['yellow'];
+                    activeSkin = d.activeSkin || 'yellow';
+                    soundOn = d.soundOn !== undefined ? d.soundOn : true;
+                } catch (e) { }
+            }
+            finishLoad();
+        }
+
+        function loadLocalFallback() {
+            try {
+                const raw = localStorage.getItem('hcc_save');
+                if (raw) {
+                    const d = JSON.parse(raw);
+                    wallet = d.wallet || 0;
+                    highScore = d.highScore || 0;
+                    multiplier = d.multiplier || 1;
+                    ownedSkins = d.ownedSkins || ['yellow'];
+                    activeSkin = d.activeSkin || 'yellow';
+                    soundOn = d.soundOn !== undefined ? d.soundOn : true;
+                }
+            } catch (e) { }
+            finishLoad();
+        }
+
+        // ── LEADERBOARD ──
+        async function loadLeaderboard() {
+            const el = document.getElementById('lb-content');
+            el.innerHTML = '<div class="lb-empty">Loading...</div>';
+            if (!sdkReady) { el.innerHTML = '<div class="lb-empty">Sign in to CrazyGames to see rankings!</div>'; return; }
+            try {
+                const res = await window.CrazyGames.SDK.leaderboard.getScores({ name: 'highscore', top: 10 });
+                if (!res || !res.scores || !res.scores.length) {
+                    el.innerHTML = '<div class="lb-empty">No scores yet. Be the first!</div>';
+                    return;
+                }
+                const ranks = ['🥇', '🥈', '🥉'];
+                el.innerHTML = res.scores.map((s, i) => `
+          <div class="lb-row">
+            <div class="lb-rank ${i < 3 ? 'top' + (i + 1) : ''}">${ranks[i] || (i + 1)}</div>
+            <div class="lb-name">${escapeHtml(s.user?.name || 'Player')}</div>
+            <div class="lb-score">${s.value}⭐</div>
+          </div>`).join('');
+            } catch (e) {
+                el.innerHTML = '<div class="lb-empty">Could not load rankings. Try again!</div>';
+            }
+        }
+
+        async function submitScore() {
+            if (!sdkReady) { showToast('Sign in to submit scores!'); return; }
+            if (highScore === 0) { showToast('Play a round first!'); return; }
+            try {
+                await window.CrazyGames.SDK.leaderboard.saveScore({ name: 'highscore', value: highScore });
+                showToast('✅ Score submitted!');
+                loadLeaderboard();
+            } catch (e) { showToast('Could not submit. Are you logged in?'); }
+        }
+
+        // ══════════════════════════════════════
+        //  GAME LOOP
+        // ══════════════════════════════════════
+        let adCountdown = 0; // show midgame ad every 3 rounds
+
+        function startGame() {
+            gameRunning = true;
+            currentScore = 0;
+            timeLeft = GAME_DURATION;
+            document.getElementById('overlay').classList.add('hidden');
+            document.getElementById('score-display').textContent = '0';
+            updateTimerBar();
+            moveCoin();
+            document.getElementById('coin').classList.remove('disabled');
+
+            timerInterval = setInterval(() => {
+                timeLeft -= 0.1;
+                updateTimerBar();
+                if (timeLeft <= 0) endGame();
+            }, 100);
+        }
+
+        let adPaused = false;
+        let pausedTimeLeft = 0;
+        function pauseGame() {
+            adPaused = true;
+            pausedTimeLeft = timeLeft;
+            clearInterval(timerInterval);
+        }
+        function resumeGameAfterAd() {
+            if (!adPaused) return;
+            adPaused = false;
+            timeLeft = pausedTimeLeft;
+            timerInterval = setInterval(() => {
+                timeLeft -= 0.1;
+                updateTimerBar();
+                if (timeLeft <= 0) endGame();
+            }, 100);
+        }
+
+        function endGame() {
+            clearInterval(timerInterval);
+            gameRunning = false;
+            document.getElementById('coin').classList.add('disabled');
+
+            const isNewBest = currentScore > highScore;
+            if (isNewBest) highScore = currentScore;
+
+            // Show overlay
+            const ov = document.getElementById('overlay');
+            ov.classList.remove('hidden');
+            document.getElementById('overlay-title').textContent = isNewBest ? '🎉 New Best!' : '⏱ Time\'s Up!';
+
+            const results = document.getElementById('overlay-results');
+            results.style.display = 'flex';
+            results.innerHTML = `
+        <div class="result-box">
+          <div class="rb-label">This Round</div>
+          <div class="rb-val">⭐${currentScore}</div>
+        </div>
+        <div class="result-box ${isNewBest ? 'new' : ''}">
+          <div class="rb-label">Best Score</div>
+          <div class="rb-val">🏅${highScore}</div>
+        </div>
+        <div class="result-box">
+          <div class="rb-label">Wallet</div>
+          <div class="rb-val">💰${wallet}</div>
+        </div>`;
+
+            document.getElementById('overlay-sub').textContent = isNewBest
+                ? 'Amazing! A new high score!'
+                : 'Keep clicking to reach the top!';
+
+            // Show rewarded ad button
+            document.getElementById('rewarded-btn').style.display = 'inline-flex';
+            // Start button
+            document.getElementById('start-btn').textContent = '▶ Play Again';
+
+            updateUI();
+            saveData();
+
+            adCountdown++;
+            if (adCountdown >= 3) { adCountdown = 0; requestMidgameAd(); }
+        }
+
+        function coinClick(e) {
+            if (!gameRunning) return;
+            e.stopPropagation();
+
+            // Score + wallet
+            currentScore++;
+            wallet += multiplier;
+            document.getElementById('score-display').textContent = currentScore;
+            document.getElementById('wallet-display').textContent = wallet;
+
+            // Rebirth visibility
+            document.getElementById('rebirth-btn').classList.toggle('visible', highScore >= REBIRTH_SCORE || currentScore >= REBIRTH_SCORE);
+
+            // Pop effect
+            const coin = document.getElementById('coin');
+            const skin = getSkin(activeSkin);
+            if (skin.id === 'rainbow') {
+                coin.className = 'skin-rainbow pop';
+            } else {
+                coin.className = skin.cls + ' pop';
+                setTimeout(() => coin.className = skin.cls, 130);
+            }
+
+            // Particles
+            spawnParticles(e.clientX || coin.offsetLeft + coin.offsetWidth / 2,
+                e.clientY || coin.offsetTop + coin.offsetHeight / 2);
+            spawnFloater(e.clientX || coin.offsetLeft + coin.offsetWidth / 2,
+                e.clientY || coin.offsetTop + coin.offsetHeight / 2);
+
+            // Move coin
+            moveCoin();
+
+            // Sound
+            if (soundOn) playPop();
+        }
+
+        function moveCoin() {
+            const coin = document.getElementById('coin');
+            const arena = document.getElementById('arena');
+            const cw = coin.offsetWidth || 100;
+            const ch = coin.offsetHeight || 100;
+            const aw = arena.offsetWidth;
+            const ah = arena.offsetHeight;
+            const margin = 20;
+            const x = Math.random() * (aw - cw - margin * 2) + margin;
+            const y = Math.random() * (ah - ch - margin * 2) + margin;
+            coin.style.left = x + 'px';
+            coin.style.top = y + 'px';
+        }
+
+        document.getElementById('coin').addEventListener('click', coinClick);
+        document.getElementById('coin').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            coinClick(e.touches[0] || { clientX: 0, clientY: 0 });
+        }, { passive: false });
+
+        // ══════════════════════════════════════
+        //  GACHA
+        // ══════════════════════════════════════
+        function rollOnce() {
+            const r = Math.random() * 100;
+            let cum = 0;
+            for (const s of SKINS) { cum += s.chance; if (r < cum) return s; }
+            return SKINS[0];
+        }
+
+        function doGachaRoll(multi = false) {
+            const cost = multi ? GACHA_5_COST : GACHA_COST;
+            const rolls = multi ? 5 : 1;
+            if (wallet < cost) { showToast(`Not enough 💰! Need ${cost}.`); return; }
+            wallet -= cost;
+            updateUI();
+
+            let lastSkin = null;
+            for (let i = 0; i < rolls; i++) {
+                const s = rollOnce();
+                if (!ownedSkins.includes(s.id)) ownedSkins.push(s.id);
+                lastSkin = s;
+            }
+
+            // Show result
+            const res = document.getElementById('gacha-result');
+            res.style.display = 'flex';
+            const preview = document.getElementById('gacha-coin-preview');
+            preview.className = lastSkin.cls.includes('rainbow') ? 'skin-rainbow' : lastSkin.cls;
+            preview.textContent = lastSkin.emoji;
+            document.getElementById('gacha-skin-name').textContent = lastSkin.name;
+            const badge = document.getElementById('gacha-rarity-badge');
+            badge.textContent = lastSkin.rarity;
+            badge.className = 'rarity-badge' + (lastSkin.rarity === 'Legendary' ? ' legendary' : '');
+            document.getElementById('gacha-flavor').textContent = lastSkin.flavor;
+
+            renderCollection();
+            saveData();
+            if (soundOn) playGachaSound();
+        }
+
+        function renderCollection() {
+            const grid = document.getElementById('skin-collection');
+            grid.innerHTML = SKINS.map(s => {
+                const owned = ownedSkins.includes(s.id);
+                const active = activeSkin === s.id;
+                return `<div class="skin-card ${active ? 'active' : ''} ${owned ? '' : 'locked'}"
+          onclick="${owned ? `equipSkin('${s.id}')` : 'showToast(\"Roll to unlock!\")'}"
+          style="${owned ? '' : 'opacity:0.35;filter:grayscale(1);cursor:not-allowed'}">
+          <div class="sc-icon">${owned ? s.emoji : '🔒'}</div>
+          <div class="sc-name">${s.name}</div>
+          <div class="sc-chance">${s.chance}%</div>
+        </div>`;
+            }).join('');
+        }
+
+        function equipSkin(id) {
+            activeSkin = id;
+            const skin = getSkin(id);
+            const coin = document.getElementById('coin');
+            coin.className = skin.cls;
+            coin.textContent = skin.emoji;
+            renderCollection();
+            saveData();
+            showToast(`✨ ${skin.name} equipped!`);
+        }
+
+        function getSkin(id) { return SKINS.find(s => s.id === id) || SKINS[1]; }
+
+        // ══════════════════════════════════════
+        //  REBIRTH
+        // ══════════════════════════════════════
+        function doRebirth() {
+            if (!confirm(`⚠️ Rebirth?\n\nYour wallet & score reset to 0.\nYou gain a permanent x${multiplier + 1} multiplier!\n\nProceed?`)) return;
+            multiplier++;
+            wallet = 0;
+            highScore = 0;
+            currentScore = 0;
+            updateUI();
+            saveData();
+            document.getElementById('rebirth-btn').classList.remove('visible');
+            showToast(`🔄 Rebirthed! Multiplier is now ×${multiplier}!`);
+            // Show start screen
+            const ov = document.getElementById('overlay');
+            ov.classList.remove('hidden');
+            document.getElementById('overlay-title').textContent = '🔄 Reborn!';
+            document.getElementById('overlay-sub').textContent = `New multiplier: ×${multiplier}. Go for 100 again!`;
+            document.getElementById('overlay-results').style.display = 'none';
+        }
+
+        // ══════════════════════════════════════
+        //  SETTINGS
+        // ══════════════════════════════════════
+        function toggleSound(on) {
+            soundOn = on;
+            saveData();
+        }
+        function toggleMusic(on) {
+            musicOn = on;
+            // Placeholder: actual music would be an <audio> element
+            showToast(on ? '🎵 Music on!' : '🔇 Music off.');
+        }
+        function confirmReset() {
+            if (!confirm('Reset ALL progress? This cannot be undone!')) return;
+            wallet = 0; highScore = 0; multiplier = 1; ownedSkins = ['yellow']; activeSkin = 'yellow';
+            updateUI(); saveData();
+            showToast('🗑️ Progress reset.');
+            closeModal();
+        }
+
+        // ══════════════════════════════════════
+        //  AUDIO
+        // ══════════════════════════════════════
+        function getAudioCtx() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            return audioCtx;
+        }
+        function playPop() {
+            try {
+                const ctx = getAudioCtx();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain); gain.connect(ctx.destination);
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600 + Math.random() * 200, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(300, ctx.currentTime + 0.08);
+                gain.gain.setValueAtTime(0.15, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+                osc.start(); osc.stop(ctx.currentTime + 0.1);
+            } catch (e) { }
+        }
+        function playGachaSound() {
+            try {
+                const ctx = getAudioCtx();
+                [0, 0.12, 0.24, 0.36, 0.48].forEach((t, i) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.connect(gain); gain.connect(ctx.destination);
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(400 + i * 120, ctx.currentTime + t);
+                    gain.gain.setValueAtTime(0.12, ctx.currentTime + t);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + t + 0.1);
+                    osc.start(ctx.currentTime + t);
+                    osc.stop(ctx.currentTime + t + 0.12);
+                });
+            } catch (e) { }
+        }
+
+        // ══════════════════════════════════════
+        //  PARTICLES & FLOATERS
+        // ══════════════════════════════════════
+        const PARTICLE_COLORS = ['#FFD700', '#FF9F00', '#FF4FCF', '#4FF0FF', '#FFFFFF', '#FFA07A'];
+        function spawnParticles(x, y) {
+            const arena = document.getElementById('arena');
+            const rect = arena.getBoundingClientRect();
+            const ax = x - rect.left;
+            const ay = y - rect.top;
+            for (let i = 0; i < 10; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                const size = 6 + Math.random() * 8;
+                const angle = Math.random() * Math.PI * 2;
+                const dist = 40 + Math.random() * 70;
+                p.style.cssText = `
+          width:${size}px;height:${size}px;
+          left:${ax}px;top:${ay}px;
+          background:${PARTICLE_COLORS[Math.floor(Math.random() * PARTICLE_COLORS.length)]};
+          --tx:${Math.cos(angle) * dist}px;
+          --ty:${Math.sin(angle) * dist}px;`;
+                arena.appendChild(p);
+                setTimeout(() => p.remove(), 720);
+            }
+        }
+        function spawnFloater(x, y) {
+            const arena = document.getElementById('arena');
+            const rect = arena.getBoundingClientRect();
+            const f = document.createElement('div');
+            f.className = 'floater';
+            f.textContent = multiplier > 1 ? `+${multiplier}` : '+1';
+            f.style.left = (x - rect.left - 20) + 'px';
+            f.style.top = (y - rect.top - 20) + 'px';
+            arena.appendChild(f);
+            setTimeout(() => f.remove(), 920);
+        }
+
+        // ══════════════════════════════════════
+        //  UI HELPERS
+        // ══════════════════════════════════════
+        function updateUI() {
+            document.getElementById('wallet-display').textContent = wallet;
+            document.getElementById('score-display').textContent = currentScore;
+            document.getElementById('best-display').textContent = highScore;
+            document.getElementById('mult-display').textContent = `×${multiplier}`;
+            document.getElementById('rebirth-btn').classList.toggle('visible',
+                (highScore >= REBIRTH_SCORE || currentScore >= REBIRTH_SCORE) && !gameRunning);
+            // Sync coin skin
+            const skin = getSkin(activeSkin);
+            const coin = document.getElementById('coin');
+            coin.className = skin.cls;
+            coin.textContent = skin.emoji;
+            // Sound toggle
+            document.getElementById('sound-toggle').checked = soundOn;
+        }
+
+        function updateTimerBar() {
+            const pct = Math.max(0, (timeLeft / GAME_DURATION) * 100);
+            document.getElementById('timer-bar').style.width = pct + '%';
+            document.getElementById('timer-label').textContent =
+                gameRunning ? `⏱ ${Math.ceil(timeLeft)}s remaining` : '';
+
+            // Color warning
+            const bar = document.getElementById('timer-bar');
+            if (pct < 25) bar.style.background = 'linear-gradient(90deg,#ff4f4f,#ff9900)';
+            else if (pct < 50) bar.style.background = 'linear-gradient(90deg,#ff9900,var(--gold))';
+            else bar.style.background = 'linear-gradient(90deg,var(--accent),var(--gold))';
+        }
+
+        // ── MODALS ──
+        function openModal(id) {
+            document.getElementById('modal-backdrop').classList.remove('hidden');
+            ['shop-modal', 'lb-modal', 'settings-modal'].forEach(m => {
+                document.getElementById(m).style.display = (m === id) ? 'block' : 'none';
+            });
+            if (id === 'shop-modal') { document.getElementById('gacha-result').style.display = 'none'; renderCollection(); }
+            if (id === 'lb-modal') loadLeaderboard();
+        }
+        function closeModal() {
+            document.getElementById('modal-backdrop').classList.add('hidden');
+        }
+        function backdropClose(e) {
+            if (e.target.id === 'modal-backdrop') closeModal();
+        }
+
+        function showToast(msg, duration = 2200) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            clearTimeout(t._timer);
+            t._timer = setTimeout(() => t.classList.remove('show'), duration);
+        }
+
+        function escapeHtml(str) {
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        // ── STARS BACKGROUND ──
+        function drawStars() {
+            const canvas = document.getElementById('stars-canvas');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            const ctx = canvas.getContext('2d');
+            for (let i = 0; i < 120; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                const r = Math.random() * 1.5;
+                ctx.beginPath();
+                ctx.arc(x, y, r, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255,255,255,${0.2 + Math.random() * 0.5})`;
+                ctx.fill();
+            }
+        }
+
+        // ── FINISH LOADING ──
+        function finishLoad() {
+            updateUI();
+            drawStars();
+
+            // Hide loading screen
+            const ls = document.getElementById('loading-screen');
+            ls.style.opacity = '0';
+            setTimeout(() => ls.remove(), 500);
+
+            // Position coin initially
+            setTimeout(moveCoin, 100);
+        }
+
+        // ── INIT ──
+        window.addEventListener('load', () => {
+            // Stars
+            const canvas = document.createElement('canvas');
+            canvas.id = 'stars-canvas';
+            document.body.insertBefore(canvas, document.getElementById('app'));
+
+            initSDK();
+            window.addEventListener('resize', drawStars);
+        });
+    </script>
+</body>
+</html>
